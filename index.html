@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oltre Hamburgueria | Sesimbra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#DCAC58',
+              goldHover: '#c49540',
+              dark: '#121214',
+              darkCard: '#1a1a1e',
+              darkBorder: '#27272a',
+              darkInput: '#232328',
+              textMuted: '#a1a1aa'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #121214; color: #f4f4f5; }
+    h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #18181b; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #DCAC58; }
+    .glass-nav { background: rgba(18, 18, 20, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .badge-pulse { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+  </style>
+  <script src="initial-data.js"></script>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- ================= TOP NOTICE BAR ================= -->
+  <div id="topNoticeBar" class="bg-brand-gold text-zinc-950 text-xs sm:text-sm font-semibold py-2 px-4 text-center flex items-center justify-center gap-2 transition-all">
+    <i class="fa-solid fa-burger"></i>
+    <span id="topNoticeText">Entregas e Takeaway em Sesimbra | Pagamento seguro por MB WAY e Multibanco</span>
+  </div>
+
+  <!-- ================= ADMIN TOOLBAR (TOGGLEABLE) ================= -->
+  <div id="adminPanel" class="hidden bg-zinc-900 border-b border-brand-gold/40 p-4 transition-all">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="p-2 bg-brand-gold/20 text-brand-gold rounded-lg">
+            <i class="fa-solid fa-sliders text-lg"></i>
+          </span>
+          <div>
+            <h2 class="font-heading font-bold text-white text-base sm:text-lg">Painel de Edição Rápida (Modo Gestor)</h2>
+            <p class="text-xs text-zinc-400">Edita o visual e os produtos em tempo real com pré-visualização instantânea.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="saveAllChanges()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar Alterações
+          </button>
+          <button onclick="resetDefaults()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-lg transition-all" title="Restaurar dados originais">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button onclick="switchAdminTab('visual')" id="tabBtnVisual" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-gold text-zinc-950">
+          <i class="fa-solid fa-paintbrush mr-1"></i> Visual & Informações da Loja
+        </button>
+        <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="px-4 py-2 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:text-white">
+          <i class="fa-solid fa-utensils mr-1"></i> Gestão de Preços & Produtos (<span id="adminProductCount">0</span>)
+        </button>
+      </div>
+
+      <!-- TAB 1: VISUAL & LOJA -->
+      <div id="tabContentVisual" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+          <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Estado da Loja</label>
+          <div class="flex items-center gap-3 mb-3">
+            <button id="btnToggleStatus" onclick="toggleStoreStatus()" class="flex-1 py-2 px-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Aberto Agora
+            </button>
+          </div>
+          <label class="block text-xs text-zinc-400 mb-1">Texto de Horário Exibido:</label>
+          <input type="text" id="adminInputStatusText" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold" placeholder="Ex: Terça a Domingo: 12h00 - 15h00 | 19h00 - 23h00">
+        </div>
+
+        <div class="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+          <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Textos do Banner & Topo</label>
+          <label class="block text-xs text-zinc-400 mb-1">Aviso Superior (Faixa Amarela):</label>
+          <input type="text" id="adminInputTopNotice" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white mb-2 focus:outline-none focus:border-brand-gold">
+          
+          <label class="block text-xs text-zinc-400 mb-1">Título do Banner (Slogan):</label>
+          <input type="text" id="adminInputHeroTitle" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white mb-2 focus:outline-none focus:border-brand-gold">
+          
+          <label class="block text-xs text-zinc-400 mb-1">Subtítulo:</label>
+          <input type="text" id="adminInputHeroSubtitle" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+        </div>
+
+        <div class="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+          <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Contactos & Entregas</label>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Taxa Entrega (€):</label>
+              <input type="number" step="0.5" id="adminInputDeliveryFee" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Pedido Mínimo (€):</label>
+              <input type="number" step="1" id="adminInputMinOrder" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+            </div>
+          </div>
+          <label class="block text-xs text-zinc-400 mb-1">Telefone da Loja:</label>
+          <input type="text" id="adminInputPhone" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white mb-2 focus:outline-none focus:border-brand-gold">
+          
+          <label class="block text-xs text-zinc-400 mb-1">URL da Imagem do Banner:</label>
+          <input type="text" id="adminInputBannerUrl" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+        </div>
+      </div>
+
+      <!-- TAB 2: PRODUTOS & PREÇOS -->
+      <div id="tabContentProducts" class="hidden bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2 flex-1 max-w-md">
+            <div class="relative w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-zinc-500 text-xs"></i>
+              <input type="text" id="adminProductSearch" oninput="renderAdminProductList()" placeholder="Filtrar por nome do hambúrguer..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="adminCategoryFilter" onchange="renderAdminProductList()" class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+              <option value="all">Todas as Categorias</option>
+            </select>
+            <button onclick="openProductEditModal(null)" class="px-3 py-1.5 bg-brand-gold hover:bg-brand-goldHover text-zinc-950 font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all">
+              <i class="fa-solid fa-plus"></i> Novo Item
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-96 custom-scrollbar border border-zinc-800 rounded-lg">
+          <table class="w-full text-left text-xs text-zinc-300">
+            <thead class="bg-zinc-900 text-zinc-400 uppercase tracking-wider sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">Item</th>
+                <th class="py-2.5 px-3">Categoria</th>
+                <th class="py-2.5 px-3 w-28">Preço Normal (€)</th>
+                <th class="py-2.5 px-3 w-28">Preço Promo (€)</th>
+                <th class="py-2.5 px-3 w-28 text-center">Disponível</th>
+                <th class="py-2.5 px-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductsTableBody" class="divide-y divide-zinc-800/60">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="sticky top-0 z-40 glass-nav border-b border-zinc-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center overflow-hidden shadow-md group-hover:border-brand-gold transition-colors">
+          <span class="font-heading font-extrabold text-2xl tracking-tighter text-brand-gold">O</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-heading font-extrabold text-xl sm:text-2xl tracking-tight text-white group-hover:text-brand-gold transition-colors">OLTRE</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-bold uppercase tracking-wider">Sesimbra</span>
+          </div>
+          <p class="text-xs text-zinc-400 -mt-0.5">Hamburgueria Artesanal</p>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-6">
+        <div class="flex items-center gap-2 text-xs">
+          <span id="navStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 badge-pulse"></span>
+          <span id="navStatusLabel" class="text-zinc-300 font-medium">Aberto para Pedidos</span>
+        </div>
+        <div class="text-xs text-zinc-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-phone text-brand-gold"></i>
+          <span id="navPhone">216 028 131</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="toggleAdminBar()" id="btnToggleAdmin" class="px-3 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-brand-gold border border-zinc-700 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+          <i class="fa-solid fa-sliders text-brand-gold"></i>
+          <span class="hidden sm:inline">Modo Gestão</span>
+        </button>
+
+        <button onclick="toggleCartDrawer(true)" class="relative p-2.5 sm:px-4 sm:py-2.5 rounded-xl bg-brand-gold hover:bg-brand-goldHover text-zinc-950 font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-brand-gold/20 transition-all transform active:scale-95">
+          <i class="fa-solid fa-bag-shopping text-base"></i>
+          <span class="hidden sm:inline">Carrinho</span>
+          <span id="cartBadgeCount" class="w-5 h-5 rounded-full bg-zinc-950 text-white text-xs flex items-center justify-center font-bold">0</span>
+          <span id="cartHeaderTotal" class="hidden sm:inline font-extrabold ml-1">0.00€</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO BANNER ================= -->
+  <section class="relative overflow-hidden border-b border-zinc-800 bg-zinc-950">
+    <div id="heroBackground" class="absolute inset-0 bg-cover bg-center opacity-25 filter blur-[1px] transition-all" style="background-image: url('https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1600&q=80');"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex flex-col items-center text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-xs font-bold uppercase tracking-widest mb-4">
+        <i class="fa-solid fa-fire"></i> Oltre Hamburgueria Artesanal
+      </div>
+      <h1 id="heroTitle" class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight max-w-3xl mb-4">
+        Io preferisco andare Oltre
+      </h1>
+      <p id="heroSubtitle" class="text-zinc-300 text-sm sm:text-base max-w-2xl mb-8 leading-relaxed">
+        Hambúrgueres artesanais de verdade em pão brioche, com carne 100% novilho e molhos secretos. Peça agora com entrega rápida em Sesimbra!
+      </p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 w-full max-w-2xl text-left">
+        <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800/80 p-3 sm:p-4 rounded-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center text-lg">
+            <i class="fa-solid fa-motorcycle"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-400 font-medium">Entrega em Sesimbra</div>
+            <div id="heroDeliveryFee" class="text-xs sm:text-sm font-bold text-white">Taxa fixa 2.50€</div>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800/80 p-3 sm:p-4 rounded-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-400 font-medium">Pagamento Fácil</div>
+            <div class="text-xs sm:text-sm font-bold text-white">MB WAY & Multibanco</div>
+          </div>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1 bg-zinc-900/80 backdrop-blur border border-zinc-800/80 p-3 sm:p-4 rounded-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div>
+            <div class="text-xs text-zinc-400 font-medium">Levantamento</div>
+            <div class="text-xs sm:text-sm font-bold text-white">Takeaway Grátis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CATEGORY BAR & SEARCH ================= -->
+  <div class="sticky top-20 z-30 bg-zinc-950/90 backdrop-blur border-b border-zinc-800 py-3 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div id="categoryPills" class="flex items-center gap-2 overflow-x-auto w-full md:w-auto custom-scrollbar pb-1 sm:pb-0">
+        </div>
+
+        <div class="relative w-full md:w-72 shrink-0">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-zinc-500 text-sm"></i>
+          <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Buscar hambúrguer, ingrediente..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-gold placeholder-zinc-500 transition-all">
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-2.5 text-zinc-500 hover:text-zinc-300">
+            <i class="fa-solid fa-circle-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN PRODUCTS GRID ================= -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 id="currentCategoryTitle" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Burgers Clássicos</h2>
+        <p id="currentCategoryDesc" class="text-xs sm:text-sm text-zinc-400 mt-1">Hambúrgueres artesanais montados no pão brioche com batata rústica inclusa.</p>
+      </div>
+      <span id="productCounter" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400">12 itens</span>
+    </div>
+
+    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    </div>
+
+    <div id="emptyState" class="hidden text-center py-16">
+      <div class="w-16 h-16 rounded-full bg-zinc-900 text-zinc-500 flex items-center justify-center mx-auto text-2xl mb-4">
+        <i class="fa-solid fa-burger"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-1">Nenhum hambúrguer encontrado</h3>
+      <p class="text-xs text-zinc-400 max-w-sm mx-auto mb-4">Tente buscar por outro nome ou selecione outra categoria acima.</p>
+      <button onclick="selectCategory('burgers')" class="px-4 py-2 bg-brand-gold text-zinc-950 font-bold text-xs rounded-lg">
+        Ver Burgers Clássicos
+      </button>
+    </div>
+  </main>
+
+  <!-- ================= PRODUCT CUSTOMIZATION MODAL ================= -->
+  <div id="productModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-brand-darkCard border border-zinc-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button onclick="closeProductModal()" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-zinc-900/80 text-zinc-300 hover:text-white flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div id="modalImageContainer" class="h-48 sm:h-56 bg-zinc-900 relative overflow-hidden shrink-0">
+        <img id="modalProductImage" src="" alt="" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-darkCard to-transparent"></div>
+        <div class="absolute bottom-3 left-4 right-4">
+          <span id="modalCategoryBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-brand-gold text-zinc-950 mb-1 inline-block">Burgers</span>
+          <h3 id="modalProductName" class="text-xl sm:text-2xl font-extrabold text-white">Oltre Special</h3>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
+        <p id="modalProductDesc" class="text-xs sm:text-sm text-zinc-400 leading-relaxed"></p>
+
+        <div id="modalDonenessSection" class="border-t border-zinc-800/80 pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Ponto da Carne</span>
+            <span class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">Obrigatório</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="doneness" value="Mal passado" class="hidden peer">
+              <div class="p-2.5 text-center text-xs font-medium rounded-xl border border-zinc-800 bg-zinc-900 peer-checked:border-brand-gold peer-checked:bg-brand-gold/10 peer-checked:text-brand-gold transition-all">
+                Mal Passado
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="doneness" value="Ao ponto" checked class="hidden peer">
+              <div class="p-2.5 text-center text-xs font-medium rounded-xl border border-zinc-800 bg-zinc-900 peer-checked:border-brand-gold peer-checked:bg-brand-gold/10 peer-checked:text-brand-gold transition-all">
+                Ao Ponto
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="doneness" value="Bem passado" class="hidden peer">
+              <div class="p-2.5 text-center text-xs font-medium rounded-xl border border-zinc-800 bg-zinc-900 peer-checked:border-brand-gold peer-checked:bg-brand-gold/10 peer-checked:text-brand-gold transition-all">
+                Bem Passado
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div id="modalExtrasSection" class="border-t border-zinc-800/80 pt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Adicionar Extras</span>
+            <span class="text-[10px] text-zinc-400">Opcional</span>
+          </div>
+          <div class="space-y-2">
+            <label class="flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-all">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" data-extra-name="Bacon Extra" data-extra-price="1.20" class="rounded border-zinc-700 bg-zinc-800 text-brand-gold focus:ring-0">
+                <span class="text-xs text-zinc-300 font-medium">Bacon Crocante Extra</span>
+              </div>
+              <span class="text-xs font-bold text-brand-gold">+1.20€</span>
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-all">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" data-extra-name="Queijo Cheddar" data-extra-price="1.00" class="rounded border-zinc-700 bg-zinc-800 text-brand-gold focus:ring-0">
+                <span class="text-xs text-zinc-300 font-medium">Queijo Cheddar Extra</span>
+              </div>
+              <span class="text-xs font-bold text-brand-gold">+1.00€</span>
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-all">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" data-extra-name="Molho Oltre" data-extra-price="0.80" class="rounded border-zinc-700 bg-zinc-800 text-brand-gold focus:ring-0">
+                <span class="text-xs text-zinc-300 font-medium">Dose Extra Molho Oltre</span>
+              </div>
+              <span class="text-xs font-bold text-brand-gold">+0.80€</span>
+            </label>
+
+            <label class="flex items-center justify-between p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-all">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" data-extra-name="Ovo Estrelado" data-extra-price="1.00" class="rounded border-zinc-700 bg-zinc-800 text-brand-gold focus:ring-0">
+                <span class="text-xs text-zinc-300 font-medium">Ovo Estrelado</span>
+              </div>
+              <span class="text-xs font-bold text-brand-gold">+1.00€</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="border-t border-zinc-800/80 pt-4">
+          <label class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5">Observações para a Cozinha</label>
+          <input type="text" id="modalProductNotes" placeholder="Ex: Sem cebola, molho à parte..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold placeholder-zinc-500">
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-zinc-800 bg-zinc-900/60 flex items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center border border-zinc-700 rounded-xl bg-zinc-900">
+          <button onclick="updateModalQuantity(-1)" class="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-minus text-xs"></i>
+          </button>
+          <span id="modalQuantity" class="w-8 text-center text-sm font-bold text-white">1</span>
+          <button onclick="updateModalQuantity(1)" class="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-plus text-xs"></i>
+          </button>
+        </div>
+
+        <button onclick="addToCartFromModal()" class="flex-1 py-2.5 px-4 bg-brand-gold hover:bg-brand-goldHover text-zinc-950 font-extrabold text-sm rounded-xl flex items-center justify-between shadow-lg transition-all transform active:scale-98">
+          <span>Adicionar ao Pedido</span>
+          <span id="modalTotalPrice">11.50€</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CART DRAWER ================= -->
+  <div id="cartDrawer" class="hidden fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-sm">
+    <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+      <div class="w-screen max-w-md bg-brand-darkCard border-l border-zinc-800 flex flex-col shadow-2xl">
+        <div class="p-4 sm:p-5 border-b border-zinc-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-bag-shopping text-brand-gold text-lg"></i>
+            <h3 class="font-heading font-extrabold text-lg text-white">Seu Pedido</h3>
+            <span id="cartDrawerCount" class="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">0</span>
+          </div>
+          <button onclick="toggleCartDrawer(false)" class="w-8 h-8 rounded-full bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-4 bg-zinc-900/40 border-b border-zinc-800">
+          <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-950 rounded-xl border border-zinc-800">
+            <button onclick="setOrderType('delivery')" id="btnOrderDelivery" class="py-2 px-3 text-xs font-bold rounded-lg transition-all bg-brand-gold text-zinc-950">
+              <i class="fa-solid fa-motorcycle mr-1"></i> Entrega (+2.50€)
+            </button>
+            <button onclick="setOrderType('takeaway')" id="btnOrderTakeaway" class="py-2 px-3 text-xs font-bold rounded-lg transition-all text-zinc-400 hover:text-white">
+              <i class="fa-solid fa-person-walking mr-1"></i> Takeaway (Grátis)
+            </button>
+          </div>
+        </div>
+
+        <div id="cartItemsList" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+        </div>
+
+        <div id="cartFooter" class="p-4 sm:p-5 border-t border-zinc-800 bg-zinc-900/80 space-y-3 shrink-0">
+          <div class="space-y-1.5 text-xs text-zinc-400">
+            <div class="flex justify-between">
+              <span>Subtotal:</span>
+              <span id="cartSummarySubtotal" class="font-medium text-white">0.00€</span>
+            </div>
+            <div id="cartDeliveryRow" class="flex justify-between">
+              <span>Taxa de Entrega (Sesimbra):</span>
+              <span id="cartSummaryDelivery" class="font-medium text-white">2.50€</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Taxa Embalagem (Dec.Lei 102D/2020):</span>
+              <span class="font-medium text-white">0.25€</span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-zinc-800 text-sm font-extrabold text-white">
+              <span>Total a Pagar:</span>
+              <span id="cartSummaryTotal" class="text-brand-gold text-base">0.00€</span>
+            </div>
+          </div>
+
+          <button onclick="openCheckoutModal()" id="btnGoCheckout" class="w-full py-3 bg-brand-gold hover:bg-brand-goldHover text-zinc-950 font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-brand-gold/20 transition-all transform active:scale-98">
+            <span>Avançar para Pagamento</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CHECKOUT MODAL ================= -->
+  <div id="checkoutModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-brand-darkCard border border-zinc-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative">
+      <div class="p-4 sm:p-5 border-b border-zinc-800 flex items-center justify-between">
+        <h3 class="font-heading font-extrabold text-lg text-white">Finalizar Encomenda</h3>
+        <button onclick="closeCheckoutModal()" class="w-8 h-8 rounded-full bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Seu Nome *</label>
+          <input type="text" id="checkoutCustomerName" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold" placeholder="Nome e Apelido">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Número de Telemóvel *</label>
+          <input type="tel" id="checkoutCustomerPhone" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold" placeholder="912 345 678">
+        </div>
+
+        <div id="checkoutAddressGroup">
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Morada de Entrega em Sesimbra *</label>
+          <input type="text" id="checkoutCustomerAddress" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold" placeholder="Rua, Número, Andar">
+        </div>
+
+        <div class="border-t border-zinc-800 pt-3">
+          <label class="block text-xs font-bold uppercase tracking-wider text-brand-gold mb-2">Método de Pagamento</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-3 p-3 bg-zinc-900 border border-brand-gold rounded-xl cursor-pointer">
+              <input type="radio" name="paymentMethod" value="mbway" checked class="text-brand-gold focus:ring-0">
+              <div class="flex-1">
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <i class="fa-solid fa-mobile-screen-button text-brand-gold"></i> MB WAY (Recomendado)
+                </div>
+                <div class="text-[10px] text-zinc-400">Receberá uma notificação na app MB WAY para confirmar.</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer">
+              <input type="radio" name="paymentMethod" value="multibanco" class="text-brand-gold focus:ring-0">
+              <div class="flex-1">
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <i class="fa-solid fa-credit-card text-brand-gold"></i> Multibanco (ifthenpay)
+                </div>
+                <div class="text-[10px] text-zinc-400">Gera Entidade e Referência para pagar no homebanking/caixa.</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-3 p-3 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer">
+              <input type="radio" name="paymentMethod" value="cash" class="text-brand-gold focus:ring-0">
+              <div class="flex-1">
+                <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <i class="fa-solid fa-money-bill-wave text-brand-gold"></i> Pagar na Entrega / Balcão
+                </div>
+                <div class="text-[10px] text-zinc-400">Pagamento no ato da receção (Dinheiro ou Cartão).</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-zinc-800 bg-zinc-900/60 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-zinc-400 uppercase">Total do Pedido</span>
+          <div id="checkoutModalTotal" class="text-lg font-black text-brand-gold">0.00€</div>
+        </div>
+        <button onclick="confirmOrder()" class="py-2.5 px-5 bg-brand-gold hover:bg-brand-goldHover text-zinc-950 font-extrabold text-sm rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center gap-2">
+          <span>Confirmar Pedido</span>
+          <i class="fa-solid fa-check"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUCCESS MODAL ================= -->
+  <div id="orderSuccessModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-brand-darkCard border border-brand-gold/40 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl relative">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl mb-4 border border-emerald-500/30">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      
+      <h3 class="text-2xl font-extrabold text-white mb-1">Pedido Confirmado!</h3>
+      <p class="text-xs text-zinc-400 mb-4">A hamburgueria Oltre Sesimbra já está a preparar a tua encomenda.</p>
+
+      <div id="orderPaymentDetails" class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 text-left text-xs mb-5 space-y-2">
+      </div>
+
+      <div class="space-y-2">
+        <button id="btnWhatsappShare" onclick="sendOrderToWhatsapp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Notificar Restaurante por WhatsApp
+        </button>
+        <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs rounded-xl transition-all">
+          Concluir e Voltar ao Menu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN PRODUCT EDIT MODAL ================= -->
+  <div id="adminProductEditModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-brand-darkCard border border-zinc-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative">
+      <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
+        <h3 id="adminEditModalTitle" class="font-heading font-extrabold text-lg text-white">Editar Produto</h3>
+        <button onclick="closeAdminProductEditModal()" class="w-8 h-8 rounded-full bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="adminEditProdId">
+        <div>
+          <label class="block text-zinc-400 mb-1">Nome do Produto:</label>
+          <input type="text" id="adminEditProdName" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-zinc-400 mb-1">Preço Normal (€):</label>
+            <input type="number" step="0.1" id="adminEditProdPrice" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block text-zinc-400 mb-1">Preço Promo (€):</label>
+            <input type="number" step="0.1" id="adminEditProdSalePrice" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white" placeholder="Opcional">
+          </div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Categoria:</label>
+          <select id="adminEditProdCategory" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white">
+          </select>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Descrição / Ingredientes:</label>
+          <textarea id="adminEditProdDesc" rows="3" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white"></textarea>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">URL da Imagem:</label>
+          <input type="text" id="adminEditProdImage" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white" placeholder="https://...">
+        </div>
+      </div>
+      <div class="p-4 border-t border-zinc-800 bg-zinc-900/60 flex justify-end gap-2">
+        <button onclick="closeAdminProductEditModal()" class="px-3 py-1.5 bg-zinc-800 text-zinc-300 rounded-lg text-xs">Cancelar</button>
+        <button onclick="saveAdminProductDetails()" class="px-4 py-1.5 bg-brand-gold text-zinc-950 font-bold rounded-lg text-xs">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-zinc-800 bg-zinc-950 py-10 mt-12 text-zinc-400 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="font-heading font-extrabold text-xl text-white">OLTRE</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-bold">Sesimbra</span>
+        </div>
+        <p class="text-zinc-400 text-xs leading-relaxed mb-3">
+          Hambúrgueres artesanais de sabor inconfundível. Feito com paixão, produtos de primeira qualidade e respeito pelo cliente.
+        </p>
+        <p class="text-[11px] text-zinc-500">Luckbunny Lda • NIF: 515791393</p>
+      </div>
+
+      <div>
+        <h4 class="font-heading font-bold text-white text-sm uppercase tracking-wider mb-3">Horários & Localização</h4>
+        <p id="footerAddress" class="mb-2"><i class="fa-solid fa-location-dot text-brand-gold mr-1.5"></i> Rua Doutor Peixoto Correia, 67, 2970-752 Sesimbra</p>
+        <p id="footerPhone" class="mb-2"><i class="fa-solid fa-phone text-brand-gold mr-1.5"></i> 216 028 131</p>
+        <p><i class="fa-solid fa-clock text-brand-gold mr-1.5"></i> Terça a Domingo: 12h-15h | 19h-23h</p>
+      </div>
+
+      <div>
+        <h4 class="font-heading font-bold text-white text-sm uppercase tracking-wider mb-3">Pagamento Seguro (ifthenpay)</h4>
+        <p class="mb-3">Aceitamos métodos de pagamento oficiais e seguros em Portugal:</p>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 rounded text-[11px] font-bold text-white">MB WAY</span>
+          <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 rounded text-[11px] font-bold text-white">Multibanco</span>
+          <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 rounded text-[11px] font-bold text-white">Numerário</span>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-8 border-t border-zinc-900 text-center text-zinc-600">
+      © 2026 Oltre Hamburgueria. Todos os direitos reservados.
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
